@@ -19,12 +19,16 @@ jobs:
           # 1. เข้าไปที่โฟลเดอร์โปรเจกต์ (รบกวนเปลี่ยน /var/www/apr เป็น path จริงบนเซิร์ฟเวอร์ของคุณ)
           cd /var/www/html/APR
           
-          # 2. ดึงโค้ดล่าสุดจาก GitHub
-          git pull origin main
+          # 2. ดึงโค้ดล่าสุดจาก GitHub (ใช้ fetch/reset เพื่อทับไฟล์ที่อาจถูกแก้ในเซิร์ฟเวอร์)
+          git fetch --all
+          git reset --hard origin/main
           
           # 3. ติดตั้ง Package และ Build หน้าบ้าน (Frontend)
           npm install
           npm run build
+          
+          # นำไฟล์ที่ Build เสร็จแล้ว (ใน dist) ออกมาไว้ที่โฟลเดอร์หลักเพื่อให้ Web Server มองเห็น
+          cp -a dist/. .
           
           # 4. ตั้งค่า Permission โฟลเดอร์ uploads ให้สามารถบันทึกคู่มือการใช้งานและไฟล์แนบได้
           mkdir -p uploads
