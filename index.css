@@ -1,0 +1,106 @@
+@import url('https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&family=Sarabun:wght@400;500;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    font-family: 'Kanit', sans-serif;
+  }
+}
+
+@layer utilities {
+  .animate-fade-in {
+    animation: fadeIn 0.3s ease-out forwards;
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+}
+
+.print-page {
+  font-family: "TH Sarabun PSK", "Sarabun", sans-serif !important;
+  font-size: 16pt;
+}
+
+@media print {
+  @page {
+    margin: 0; /* Forces the browser to not print the default URL/Date headers and footers */
+  }
+
+  /* 1. Hide the entire core UI layout elements */
+  aside,
+  header,
+  .no-print {
+    display: none !important;
+  }
+
+  /* 2. Remove ANY height, padding, styling from parents so they just act as invisible wrappers */
+  body,
+  #root,
+  #root>div,
+  #root>div>div,
+  main,
+  main>div {
+    display: block !important;
+    position: static !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    overflow: visible !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: transparent !important;
+  }
+
+  /* 3. Also flatten the specific grids that contain the print-container */
+  .print-container,
+  .print-container>div:not(.no-print),
+  .print-container>div>div:not(.no-print) {
+    display: block !important;
+    position: static !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  /* 4. The pages themselves */
+  .print-page {
+    position: relative !important;
+    width: 100% !important;
+    margin: 0 auto !important;
+    padding: 1.5cm 2cm !important; /* Restores the visual margin inside the paper */
+    box-sizing: border-box !important;
+    box-shadow: none !important;
+    border: none !important;
+    background: white !important;
+    display: block !important;
+    page-break-after: always;
+    break-after: page;
+  }
+
+  .print-page:last-child {
+    page-break-after: auto;
+    break-after: auto;
+  }
+
+  .print-page img:not(.object-contain) {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+}

@@ -1,0 +1,17 @@
+# Dependencies
+node_modules/
+dist/
+
+# Env
+.env
+.env.local
+.env.production
+
+# Uploads and User Files
+uploads/*
+!uploads/.gitkeep
+
+# Other temp files
+deploy_apr/
+deploy_apr.zip
+DEPLOY_ME/
