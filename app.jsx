@@ -2452,7 +2452,7 @@ export default function App() {
                               </select>
                             </td>
                             <td className="px-6 py-3 flex justify-center gap-2">
-                              <button onClick={() => { setEditingStaffId(row.id); setEditForm({ code: row.code, name: row.name, position: row.position, group_id: row.group_id }); }} className="p-1 text-blue-500 hover:text-blue-700 transition" title="แก้ไข"><Edit size={16} /></button>
+                              <button onClick={() => { setEditingStaffId(row.id); setEditForm({ code: row.code, name: row.name, position: row.position, group_id: row.group_ids ? row.group_ids.split(',')[0] : '' }); }} className="p-1 text-blue-500 hover:text-blue-700 transition" title="แก้ไข"><Edit size={16} /></button>
                               <button onClick={() => handleDeleteStaff(row.id)} className="p-1 text-red-400 hover:text-red-600 transition" title="ลบ"><Trash size={16} /></button>
                             </td>
                           </>
