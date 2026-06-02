@@ -4,15 +4,17 @@ require_once 'config.php';
 try {
     $data = json_decode(file_get_contents('php://input'), true);
     
-    if (empty($data['code']) || empty($data['name'])) {
-        throw new Exception("กรุณากรอกรหัสและชื่อบุคลากรให้ครบถ้วน");
+    if (empty($data['name'])) {
+        throw new Exception("กรุณากรอกชื่อบุคลากร");
     }
     
-    $code = trim($data['code']);
     $name = trim($data['name']);
     $position = trim($data['position'] ?? '');
+    
+    // ถ้าไม่ระบุรหัส/อีเมล ให้สุ่มรหัสชั่วคราวให้
+    $code = !empty($data['code']) ? trim($data['code']) : 'temp_' . time() . '_' . rand(100,999);
 
-    // Check duplicate
+    // Check duplicate only if code was provided explicitly or randomly generated (unlikely to clash)
     $stmtCheck = $conn->prepare("SELECT id FROM staffs WHERE staff_code = ?");
     $stmtCheck->execute([$code]);
     if ($stmtCheck->rowCount() > 0) {

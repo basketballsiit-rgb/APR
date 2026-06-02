@@ -2019,7 +2019,7 @@ export default function App() {
     };
 
     const handleAddStaff = () => {
-      if (!newStaffForm.code.trim() || !newStaffForm.name.trim()) return alert("กรุณากรอกรหัสและชื่อบุคลากรให้ครบถ้วน");
+      if (!newStaffForm.name.trim()) return alert("กรุณากรอกชื่อบุคลากร");
       setIsAddingStaff(true);
       fetch(`${API_URL}/add_staff.php`, {
         method: 'POST',
@@ -2333,7 +2333,7 @@ export default function App() {
                 </h4>
                 <div className="flex flex-wrap gap-3 items-end">
                   <div className="flex-1 min-w-[150px]">
-                    <label className="block text-xs font-semibold text-slate-600 mb-1">รหัส/อีเมล (สำหรับ Keycloak)</label>
+                    <label className="block text-xs font-semibold text-slate-600 mb-1">รหัส/อีเมล (เว้นว่างได้)</label>
                     <input 
                       type="text" 
                       value={newStaffForm.code}
