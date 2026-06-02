@@ -2327,12 +2327,51 @@ export default function App() {
             </h3>
 
             <div className="bg-white rounded-xl border border-slate-200 overflow-hidden mb-10 shadow-sm animate-fade-in">
-              {/* Form Add Staff Manual - Removed as handled by Keycloak */}
-              <div className="p-4 bg-blue-50/50 border-b border-slate-200 flex items-center gap-2">
-                <ShieldCheck className="text-blue-500" size={18} />
-                <span className="text-sm font-medium text-blue-800">
-                  รายชื่อบุคลากรถูกจัดการผ่านระบบ Keycloak ศูนย์กลางของวิทยาลัยฯ หากไม่มีชื่อกรุณาติดต่อผู้ดูแลระบบ (IT)
-                </span>
+              <div className="p-4 bg-slate-50 border-b border-slate-200">
+                <h4 className="text-sm font-bold text-slate-700 mb-3 flex items-center gap-2">
+                  <UserPlus size={16} /> เพิ่มบุคลากรแบบกำหนดเอง (1 รายการ)
+                </h4>
+                <div className="flex flex-wrap gap-3 items-end">
+                  <div className="flex-1 min-w-[150px]">
+                    <label className="block text-xs font-semibold text-slate-600 mb-1">รหัส/อีเมล (สำหรับ Keycloak)</label>
+                    <input 
+                      type="text" 
+                      value={newStaffForm.code}
+                      onChange={e => setNewStaffForm({...newStaffForm, code: e.target.value})}
+                      className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500" 
+                      placeholder="เช่น n001@npc.ac.th"
+                    />
+                  </div>
+                  <div className="flex-1 min-w-[200px]">
+                    <label className="block text-xs font-semibold text-slate-600 mb-1">ชื่อ-สกุล</label>
+                    <input 
+                      type="text" 
+                      value={newStaffForm.name}
+                      onChange={e => setNewStaffForm({...newStaffForm, name: e.target.value})}
+                      className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500" 
+                      placeholder="เช่น นาย สมชาย ใจดี"
+                    />
+                  </div>
+                  <div className="flex-1 min-w-[150px]">
+                    <label className="block text-xs font-semibold text-slate-600 mb-1">ตำแหน่ง (ระบุหรือไม่ก็ได้)</label>
+                    <input 
+                      type="text" 
+                      value={newStaffForm.position}
+                      onChange={e => setNewStaffForm({...newStaffForm, position: e.target.value})}
+                      className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500" 
+                      placeholder="เช่น ครูผู้สอน"
+                    />
+                  </div>
+                  <button 
+                    onClick={handleAddStaff}
+                    className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold rounded-lg shadow-sm transition-colors"
+                  >
+                    บันทึกเพิ่ม
+                  </button>
+                </div>
+                <p className="text-xs text-amber-600 mt-2 font-medium">
+                  * หมายเหตุ: หากบุคลากรต้องการล็อกอินเข้าใช้งานระบบด้วยตัวเอง ต้องใช้อีเมลนี้สมัครผูกกับระบบ Keycloak SSO
+                </p>
               </div>
               <div className="overflow-x-auto max-h-96">
                 <table className="w-full text-left text-sm text-slate-600">
