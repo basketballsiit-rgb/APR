@@ -5,7 +5,7 @@ import {
   Clock, ChevronRight, Menu, X, FileSpreadsheet, Download,
   Printer, Filter, Check, Loader2, UploadCloud, FileUp, Save,
   Edit, Trash, Bell, UserCheck, AlertCircle, Lock, ShieldCheck, Paperclip,
-  BookOpen
+  BookOpen, UserPlus
 } from 'lucide-react';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer
