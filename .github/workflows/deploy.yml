@@ -17,7 +17,7 @@ jobs:
         key: ${{ secrets.SERVER_SSH_KEY }}
         script: |
           # 1. เข้าไปที่โฟลเดอร์โปรเจกต์ (รบกวนเปลี่ยน /var/www/apr เป็น path จริงบนเซิร์ฟเวอร์ของคุณ)
-          cd /var/www/apr
+          cd /var/www/html/APR
           
           # 2. ดึงโค้ดล่าสุดจาก GitHub
           git pull origin main
