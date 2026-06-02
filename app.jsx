@@ -2716,8 +2716,6 @@ export default function App() {
               </div>
             </div>
 
-            </div>
-
             {/* Upload Manual Settings */}
             <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6 space-y-5">
               <div className="flex justify-between items-center border-b border-slate-100 pb-3">
