@@ -1,0 +1,31 @@
+name: Deploy APR
+
+# สั่งให้ทำงานทุกครั้งที่มีการ Push โค้ดมาที่เส้นทาง main
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+    - name: เชื่อมต่อเซิร์ฟเวอร์และอัปเดตระบบ
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.SERVER_IP }}
+        username: ${{ secrets.SERVER_USER }}
+        key: ${{ secrets.SERVER_SSH_KEY }}
+        script: |
+          # 1. เข้าไปที่โฟลเดอร์โปรเจกต์ (รบกวนเปลี่ยน /var/www/apr เป็น path จริงบนเซิร์ฟเวอร์ของคุณ)
+          cd /var/www/apr
+          
+          # 2. ดึงโค้ดล่าสุดจาก GitHub
+          git pull origin main
+          
+          # 3. ติดตั้ง Package และ Build หน้าบ้าน (Frontend)
+          npm install
+          npm run build
+          
+          # 4. ตั้งค่า Permission โฟลเดอร์ uploads ให้สามารถบันทึกคู่มือการใช้งานและไฟล์แนบได้
+          mkdir -p uploads
+          chmod 777 -R uploads/
