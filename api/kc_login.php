@@ -2,7 +2,7 @@
 require_once 'config.php';
 
 // Keycloak OAuth2 parameters
-$kc_auth_url = 'http://service.npc.ac.th/realms/NPC-SSO/protocol/openid-connect/auth';
+$kc_auth_url = 'https://service.npc.ac.th/realms/NPC-SSO/protocol/openid-connect/auth';
 $client_id = 'apr-app';
 // Auto-detect protocol and host
 $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' || $_SERVER['SERVER_PORT'] == 443) ? "https://" : "http://";

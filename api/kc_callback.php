@@ -8,8 +8,8 @@ $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' || $_SERVE
 $host = $_SERVER['HTTP_HOST'];
 $redirect_uri = $protocol . $host . '/APR/api/kc_callback.php';
 
-$kc_token_url = 'http://service.npc.ac.th/realms/NPC-SSO/protocol/openid-connect/token';
-$kc_userinfo_url = 'http://service.npc.ac.th/realms/NPC-SSO/protocol/openid-connect/userinfo';
+$kc_token_url = 'https://service.npc.ac.th/realms/NPC-SSO/protocol/openid-connect/token';
+$kc_userinfo_url = 'https://service.npc.ac.th/realms/NPC-SSO/protocol/openid-connect/userinfo';
 
 if (!isset($_GET['code'])) {
     die("Error: No authorization code received from Keycloak.");
