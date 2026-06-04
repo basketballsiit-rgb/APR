@@ -23,13 +23,6 @@ jobs:
           git fetch --all
           git reset --hard origin/main
           
-          # 3. ติดตั้ง Package และ Build หน้าบ้าน (Frontend)
-          npm install
-          npm run build
-          
-          # นำไฟล์ที่ Build เสร็จแล้ว (ใน dist) ออกมาไว้ที่โฟลเดอร์หลักเพื่อให้ Web Server มองเห็น
-          cp -a dist/. .
-          
-          # 4. ตั้งค่า Permission โฟลเดอร์ uploads ให้สามารถบันทึกคู่มือการใช้งานและไฟล์แนบได้
+          # 3. ตั้งค่า Permission โฟลเดอร์ uploads ให้สามารถบันทึกคู่มือการใช้งานและไฟล์แนบได้
           mkdir -p uploads
           chmod 777 -R uploads/
