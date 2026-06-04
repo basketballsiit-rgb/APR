@@ -4,7 +4,7 @@ import {
   Settings, LogOut, Search, Plus, Upload, CheckCircle2,
   Clock, ChevronRight, Menu, X, FileSpreadsheet, Download,
   Printer, Filter, Check, Loader2, UploadCloud, FileUp, Save,
-  Edit, Trash, Bell, UserCheck, AlertCircle, Lock, ShieldCheck, Paperclip,
+  Edit, Trash, Bell, UserCheck, AlertCircle, Lock, Unlock, ShieldCheck, Paperclip,
   BookOpen, UserPlus
 } from 'lucide-react';
 import {
@@ -720,6 +720,25 @@ export default function App() {
       });
     };
 
+    const handleUnlockActivity = (id) => {
+      if (!confirm('ยืนยันปลดล็อคกิจกรรมนี้?\nหลังจากปลดล็อคแล้ว ผู้ใช้สิทธิ์ผู้รายงานจะสามารถแก้ไขข้อมูลการเข้าร่วมได้อีกครั้ง')) return;
+      fetch(`${API_URL}/unlock_activity.php`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id })
+      })
+        .then(res => res.json())
+        .then(res => {
+          if (res.status === 'success') {
+            fetchActivities();
+            alert('✅ ปลดล็อคกิจกรรมเรียบร้อยแล้ว');
+          } else {
+            alert('เกิดข้อผิดพลาด: ' + res.message);
+          }
+        })
+        .catch(() => alert('ไม่สามารถเชื่อมต่อ server ได้'));
+    };
+
     const handleDeleteActivity = (id) => {
       if (confirm('คุณต้องการลบกิจกรรมนี้ใช่หรือไม่? ข้อมูลการเช็คชื่อทั้งหมดจะถูกลบไปด้วยและไม่สามารถกู้คืนได้')) {
         fetch(`${API_URL}/delete_activity.php`, {
@@ -976,9 +995,15 @@ export default function App() {
                   )}
 
                   {activity.status === 'locked' ? (
-                    <span className="px-3 py-1 bg-rose-50 text-rose-700 text-sm font-medium rounded-full border border-rose-200 flex items-center gap-1">
-                      <Lock size={12} /> ล็อคแล้ว
-                    </span>
+                    currentUser?.role === 'admin' ? (
+                      <button onClick={() => handleUnlockActivity(activity.id)} className="px-3 py-1 bg-rose-50 hover:bg-rose-100 text-rose-700 text-sm font-semibold rounded-lg border border-rose-300 flex items-center gap-1.5 transition" title="คลิกเพื่อปลดล็อคกิจกรรม">
+                        <Unlock size={12} className="text-rose-600" /> ล็อคแล้ว (ปลดล็อค)
+                      </button>
+                    ) : (
+                      <span className="px-3 py-1 bg-rose-50 text-rose-700 text-sm font-medium rounded-full border border-rose-200 flex items-center gap-1">
+                        <Lock size={12} /> ล็อคแล้ว
+                      </span>
+                    )
                   ) : activity.status === 'active' ? (
                     <button
                       onClick={() => handleSelectActivity(activity)}
@@ -1317,6 +1342,31 @@ export default function App() {
         .catch(() => alert('ไม่สามารถเชื่อมต่อ server ได้'));
     };
 
+    const handleUnlockActivity = () => {
+      if (!reportData || !reportData.activity || !reportData.activity.id) {
+        return alert('กรุณาดึงข้อมูลรายงานก่อนทำการปลดล็อค');
+      }
+      const activityId = parseInt(reportData.activity.id);
+      if (!activityId) return alert('ไม่พบรหัสกิจกรรม กรุณาลองใหม่อีกครั้ง');
+      if (!confirm('ยืนยันปลดล็อคกิจกรรมนี้?\nหลังจากปลดล็อคแล้ว ผู้ใช้สิทธิ์ผู้รายงานจะสามารถแก้ไขข้อมูลการเข้าร่วมได้อีกครั้ง')) return;
+      fetch(`${API_URL}/unlock_activity.php`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: activityId })
+      })
+        .then(res => res.json())
+        .then(res => {
+          if (res.status === 'success') {
+            setActivitiesRefreshKey(k => k + 1);
+            fetchReport();
+            alert('✅ ปลดล็อคกิจกรรมเรียบร้อยแล้ว');
+          } else {
+            alert('เกิดข้อผิดพลาด: ' + res.message);
+          }
+        })
+        .catch(() => alert('ไม่สามารถเชื่อมต่อ server ได้'));
+    };
+
     if (loadingFilters) return <div className="flex justify-center py-20"><Loader2 className="animate-spin text-blue-500 w-10 h-10" /></div>;
 
     return (
@@ -1350,10 +1400,24 @@ export default function App() {
               <span className="whitespace-nowrap">พิมพ์ / PDF</span>
             </button>
             {reportMode === 'single' && (
-              <button onClick={handleLockActivity} disabled={!reportData} className="flex-1 xl:flex-none flex items-center justify-center gap-2 bg-rose-600 text-white px-4 py-2 rounded-lg shadow-sm hover:bg-rose-700 transition font-medium disabled:opacity-50">
-                <Lock size={18} />
-                <span className="whitespace-nowrap">ล็อคกิจกรรม</span>
-              </button>
+              reportData?.activity?.status === 'locked' ? (
+                currentUser?.role === 'admin' ? (
+                  <button onClick={handleUnlockActivity} className="flex-1 xl:flex-none flex items-center justify-center gap-2 bg-amber-600 hover:bg-amber-700 text-white px-4 py-2 rounded-lg shadow-sm transition font-medium">
+                    <Unlock size={18} />
+                    <span className="whitespace-nowrap">ปลดล็อคกิจกรรม</span>
+                  </button>
+                ) : (
+                  <button disabled className="flex-1 xl:flex-none flex items-center justify-center gap-2 bg-slate-300 text-slate-500 px-4 py-2 rounded-lg font-medium cursor-not-allowed">
+                    <Lock size={18} />
+                    <span className="whitespace-nowrap">ล็อคแล้ว</span>
+                  </button>
+                )
+              ) : (
+                <button onClick={handleLockActivity} disabled={!reportData} className="flex-1 xl:flex-none flex items-center justify-center gap-2 bg-rose-600 text-white px-4 py-2 rounded-lg shadow-sm hover:bg-rose-700 transition font-medium disabled:opacity-50">
+                  <Lock size={18} />
+                  <span className="whitespace-nowrap">ล็อคกิจกรรม</span>
+                </button>
+              )
             )}
           </div>
         </div>
