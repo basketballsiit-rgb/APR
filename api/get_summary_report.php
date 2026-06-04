@@ -88,9 +88,7 @@ try {
         $actMap[$act['id']] = $act;
         foreach ($staffMap as &$s) {
             $is_in_group = ($act['group_id'] == 0 || in_array($act['group_id'], $s['group_ids_array']));
-            $has_proxy = isset($proxyLookup[$s['id']][$act['id']]);
-            // นับกิจกรรมให้บุคคลนี้ ถ้าเขาอยู่ในกลุ่มเป้าหมาย "หรือ" เขามีคนไปแทนในกิจกรรมนั้น
-            if ($is_in_group || $has_proxy) {
+            if ($is_in_group) {
                 $s['total_acts']++;
             }
         }
@@ -105,15 +103,14 @@ try {
         }
     }
 
-    // คำนวณการเข้าร่วมโดยรวม Proxy เป็น 'มา' ด้วย
+    // คำนวณการเข้าร่วมโดยรวม
     foreach ($activities as $act) {
         foreach ($staffMap as &$s) {
             $is_in_group = ($act['group_id'] == 0 || in_array($act['group_id'], $s['group_ids_array']));
-            $has_proxy = isset($proxyLookup[$s['id']][$act['id']]);
             
-            if ($is_in_group || $has_proxy) {
-                // หากปกติมาเข้าร่วม หรือ มีตัวแทน ก็จะถูกนับว่า 'เข้าร่วม'
-                if (isset($attendanceLookup[$s['id']][$act['id']]) || $has_proxy) {
+            if ($is_in_group) {
+                // หากมาเข้าร่วมปกติก็นับว่า 'เข้าร่วม'
+                if (isset($attendanceLookup[$s['id']][$act['id']])) {
                     $s['attended']++;
                 }
             }

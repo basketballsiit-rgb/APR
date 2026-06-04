@@ -1516,7 +1516,7 @@ export default function App() {
                 <h3 className="text-sm font-bold text-blue-900 mb-3">สรุปข้อมูลเบื้องต้น</h3>
                 <div className="space-y-2 text-sm text-blue-800">
                   <div className="flex justify-between"><span>ทั้งหมด:</span> <span className="font-bold">{reportData.staffList.length} คน</span></div>
-                  <div className="flex justify-between"><span>มาเข้าร่วม:</span> <span className="font-bold text-emerald-600">{reportData.staffList.filter(s => s.status === 'present').length} คน</span></div>
+                  <div className="flex justify-between"><span>มาเข้าร่วม:</span> <span className="font-bold text-emerald-600">{reportData.staffList.filter(s => s.status === 'present' || s.proxy_id).length} คน</span></div>
                   <div className="flex justify-between"><span>ลา/ขาด:</span> <span className="font-bold text-rose-600">{reportData.staffList.filter(s => s.status !== 'present').length} คน</span></div>
                 </div>
               </div>
@@ -1597,7 +1597,7 @@ export default function App() {
                             <p className="font-bold underline mb-2 print:mb-1">สรุปผลการเข้าร่วมกิจกรรม</p>
                             <div className="grid grid-cols-2 gap-1 print:gap-0">
                               <p>ผู้มีรายชื่อทั้งหมด:</p><p className="text-right">{reportData.staffList.length} คน</p>
-                              <p>มาเข้าร่วม:</p><p className="text-right">{reportData.staffList.filter(s => s.status === 'present').length} คน</p>
+                              <p>มาเข้าร่วม:</p><p className="text-right">{reportData.staffList.filter(s => s.status === 'present' || s.proxy_id).length} คน</p>
                               <p>ขาด:</p><p className="text-right">{reportData.staffList.filter(s => s.status !== 'present').length} คน</p>
                             </div>
                           </div>
