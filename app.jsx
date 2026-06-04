@@ -1738,6 +1738,309 @@ export default function App() {
     );
   };
 
+  // --- PDF Reports Archive View ---
+  const PdfReportsView = () => {
+    const [terms, setTerms] = useState([]);
+    const [selectedTerm, setSelectedTerm] = useState('');
+    const [activities, setActivities] = useState([]);
+    const [searchQuery, setSearchQuery] = useState('');
+    const [loadingTerms, setLoadingTerms] = useState(true);
+    const [loadingActivities, setLoadingActivities] = useState(false);
+    const [uploadingPdf, setUploadingPdf] = useState({});
+
+    // Fetch terms on mount
+    useEffect(() => {
+      setLoadingTerms(true);
+      fetch(`${API_URL}/get_filters.php`)
+        .then(res => res.json())
+        .then(res => {
+          if (res.status === 'success') {
+            setTerms(res.data.terms || []);
+            if (res.data.terms && res.data.terms.length > 0) {
+              const activeTerm = res.data.terms.find(t => t.is_active == 1) || res.data.terms[0];
+              setSelectedTerm(activeTerm.id.toString());
+            }
+          }
+          setLoadingTerms(false);
+        })
+        .catch(err => {
+          console.error(err);
+          setLoadingTerms(false);
+        });
+    }, []);
+
+    // Fetch activities when selectedTerm changes
+    const fetchActivities = () => {
+      if (!selectedTerm) return;
+      setLoadingActivities(true);
+      fetch(`${API_URL}/get_activities.php?term_id=${selectedTerm}`)
+        .then(res => res.json())
+        .then(res => {
+          if (res.status === 'success') {
+            setActivities(res.data || []);
+          } else {
+            alert(res.message || 'ไม่สามารถโหลดข้อมูลกิจกรรมได้');
+          }
+          setLoadingActivities(false);
+        })
+        .catch(err => {
+          console.error(err);
+          setLoadingActivities(false);
+        });
+    };
+
+    useEffect(() => {
+      fetchActivities();
+    }, [selectedTerm]);
+
+    // Handle PDF upload
+    const handlePdfUpload = async (activityId, file) => {
+      if (!file) return;
+      
+      // Limit to 20MB
+      if (file.size > 20 * 1024 * 1024) {
+        alert("ไฟล์มีขนาดใหญ่เกินกว่า 20 MB");
+        return;
+      }
+      
+      // Check file type (PDF Only)
+      const ext = file.name.split('.').pop().toLowerCase();
+      if (ext !== 'pdf' && file.type !== 'application/pdf') {
+        alert("ระบบอนุญาตให้อัปโหลดเฉพาะไฟล์ PDF เท่านั้น");
+        return;
+      }
+
+      setUploadingPdf(prev => ({ ...prev, [activityId]: true }));
+      const formData = new FormData();
+      formData.append('file', file);
+
+      try {
+        const uploadRes = await fetch(`${API_URL}/upload_attachment.php`, {
+          method: 'POST',
+          body: formData
+        }).then(r => r.json());
+
+        if (uploadRes.status === 'success') {
+          // Save path to DB
+          const saveRes = await fetch(`${API_URL}/save_report_pdf.php`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ activity_id: activityId, report_pdf_path: uploadRes.file_path })
+          }).then(r => r.json());
+
+          if (saveRes.status === 'success') {
+            alert("อัปโหลดไฟล์รายงานสำเร็จ");
+            fetchActivities();
+          } else {
+            alert("บันทึกไฟล์ล้มเหลว: " + saveRes.message);
+          }
+        } else {
+          alert("อัปโหลดไฟล์ล้มเหลว: " + uploadRes.message);
+        }
+      } catch (err) {
+        console.error(err);
+        alert("เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์");
+      } finally {
+        setUploadingPdf(prev => ({ ...prev, [activityId]: false }));
+      }
+    };
+
+    // Handle PDF delete
+    const handlePdfDelete = async (activityId) => {
+      if (!window.confirm("คุณต้องการลบไฟล์รายงาน PDF นี้ใช่หรือไม่?")) return;
+
+      try {
+        const saveRes = await fetch(`${API_URL}/save_report_pdf.php`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ activity_id: activityId, report_pdf_path: null })
+        }).then(r => r.json());
+
+        if (saveRes.status === 'success') {
+          alert("ลบไฟล์รายงานสำเร็จ");
+          fetchActivities();
+        } else {
+          alert("เกิดข้อผิดพลาดในการลบไฟล์: " + saveRes.message);
+        }
+      } catch (err) {
+        console.error(err);
+        alert("เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์");
+      }
+    };
+
+    if (loadingTerms) {
+      return (
+        <div className="flex justify-center py-20">
+          <Loader2 className="animate-spin text-blue-500 w-10 h-10" />
+        </div>
+      );
+    }
+
+    // Filter activities locally by search query
+    const filteredActivities = activities.filter(act => 
+      act.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (act.group_name && act.group_name.toLowerCase().includes(searchQuery.toLowerCase()))
+    );
+
+    const isAuthorized = currentUser?.role === 'admin' || currentUser?.role === 'reporter';
+
+    return (
+      <div className="space-y-6 animate-fade-in pb-12">
+        {/* Header */}
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+          <div>
+            <h2 className="text-2xl font-bold text-slate-800 flex items-center gap-2">
+              <BookOpen className="text-blue-600" />
+              คลังรายงาน PDF (ข้อมูลย้อนหลัง)
+            </h2>
+            <p className="text-slate-550 text-sm mt-1 font-medium">แสดงรายชื่อกิจกรรมและเอกสารรายงานการเข้าร่วมกิจกรรมที่สมบูรณ์ตามภาคเรียน</p>
+          </div>
+        </div>
+
+        {/* Filters Panel */}
+        <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200/80 flex flex-col md:flex-row gap-4 items-center">
+          <div className="w-full md:w-1/3">
+            <label className="block text-sm font-semibold text-slate-700 mb-1.5">เลือกภาคเรียน</label>
+            <select
+              value={selectedTerm}
+              onChange={e => setSelectedTerm(e.target.value)}
+              className="w-full rounded-xl border-slate-300 focus:border-blue-500 focus:ring-blue-500 shadow-sm"
+            >
+              <option value="">-- เลือกภาคเรียน --</option>
+              {terms.map(t => (
+                <option key={t.id} value={t.id}>
+                  {t.term_name} {t.is_active == 1 ? '(ภาคเรียนปัจจุบัน)' : ''}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="w-full md:w-2/3">
+            <label className="block text-sm font-semibold text-slate-700 mb-1.5">ค้นหากิจกรรม</label>
+            <div className="relative">
+              <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                <Search size={18} />
+              </span>
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                placeholder="ค้นหาชื่อกิจกรรม หรือกลุ่มเป้าหมาย..."
+                className="w-full pl-10 rounded-xl border-slate-300 focus:border-blue-500 focus:ring-blue-500 shadow-sm"
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* List Table */}
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-200/80 overflow-hidden">
+          {loadingActivities ? (
+            <div className="flex justify-center py-20">
+              <Loader2 className="animate-spin text-blue-500 w-10 h-10" />
+            </div>
+          ) : filteredActivities.length === 0 ? (
+            <div className="text-center py-16 text-slate-500">
+              <p className="text-lg">ไม่พบกิจกรรมการจัดโครงการ/กิจกรรมในภาคเรียนนี้</p>
+              <p className="text-sm text-slate-400 mt-1">กรุณาเลือกภาคเรียนอื่น หรือปรับปรุงคำค้นหาใหม่</p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="bg-slate-50 border-b border-slate-200">
+                    <th className="px-6 py-4 text-xs font-semibold text-slate-550 uppercase tracking-wider w-16 text-center">ลำดับ</th>
+                    <th className="px-6 py-4 text-xs font-semibold text-slate-550 uppercase tracking-wider">วันที่จัดกิจกรรม</th>
+                    <th className="px-6 py-4 text-xs font-semibold text-slate-550 uppercase tracking-wider">ชื่อกิจกรรม</th>
+                    <th className="px-6 py-4 text-xs font-semibold text-slate-550 uppercase tracking-wider">กลุ่มเป้าหมาย</th>
+                    <th className="px-6 py-4 text-xs font-semibold text-slate-550 uppercase tracking-wider w-36 text-center">สถานะ</th>
+                    <th className="px-6 py-4 text-xs font-semibold text-slate-550 uppercase tracking-wider w-72 text-center">ไฟล์รายงานผล PDF</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {filteredActivities.map((act, index) => {
+                    const statusConfig = {
+                      locked: { text: '🔒 ล็อคแล้ว', color: 'bg-red-50 text-red-700 border-red-200' },
+                      completed: { text: 'เสร็จสิ้นแล้ว', color: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
+                      active: { text: 'ดำเนินการลงชื่อ', color: 'bg-blue-50 text-blue-700 border-blue-200' },
+                      upcoming: { text: 'เตรียมดำเนินการ', color: 'bg-slate-50 text-slate-700 border-slate-200' }
+                    };
+                    const status = statusConfig[act.status] || { text: act.status, color: 'bg-slate-50 text-slate-700 border-slate-200' };
+
+                    return (
+                      <tr key={act.id} className="hover:bg-slate-50/50 transition">
+                        <td className="px-6 py-4 text-center font-medium text-slate-600">{index + 1}</td>
+                        <td className="px-6 py-4 font-medium text-slate-700">{act.date}</td>
+                        <td className="px-6 py-4 font-semibold text-slate-900">{act.name}</td>
+                        <td className="px-6 py-4 text-slate-600">{act.group_name}</td>
+                        <td className="px-6 py-4 text-center">
+                          <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-semibold border ${status.color}`}>
+                            {status.text}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 text-center">
+                          <div className="flex justify-center items-center gap-2">
+                            {act.report_pdf_path ? (
+                              <>
+                                <a
+                                  href={`${API_URL}/../${act.report_pdf_path}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="inline-flex items-center gap-1.5 bg-blue-50 text-blue-700 px-3 py-1.5 rounded-lg border border-blue-200 hover:bg-blue-100 transition text-xs font-semibold shadow-sm"
+                                >
+                                  <FileText size={14} />
+                                  เปิดดูรายงาน
+                                </a>
+                                {isAuthorized && (
+                                  <button
+                                    onClick={() => handlePdfDelete(act.id)}
+                                    className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition border border-transparent hover:border-red-150"
+                                    title="ลบไฟล์รายงาน"
+                                  >
+                                    <Trash size={14} />
+                                  </button>
+                                )}
+                              </>
+                            ) : (
+                              isAuthorized ? (
+                                uploadingPdf[act.id] ? (
+                                  <span className="text-xs text-slate-500 flex items-center gap-1">
+                                    <Loader2 className="animate-spin text-blue-500" size={14} />
+                                    กำลังอัปโหลด...
+                                  </span>
+                                ) : (
+                                  <label className="inline-flex items-center gap-1.5 bg-slate-50 hover:bg-slate-100 text-slate-700 px-3 py-1.5 rounded-lg border border-slate-200 cursor-pointer transition text-xs font-semibold shadow-sm">
+                                    <Upload size={14} />
+                                    อัปโหลด PDF
+                                    <input
+                                      type="file"
+                                      accept=".pdf"
+                                      className="hidden"
+                                      onChange={e => {
+                                        if (e.target.files && e.target.files[0]) {
+                                          handlePdfUpload(act.id, e.target.files[0]);
+                                        }
+                                      }}
+                                    />
+                                  </label>
+                                )
+                              ) : (
+                                <span className="text-xs text-slate-400 italic font-normal">ยังไม่มีรายงาน</span>
+                              )
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
+
   // 4. Group Management View
   const GroupManagementView = () => {
     const [allStaff, setAllStaff] = useState([]);
@@ -3060,6 +3363,15 @@ export default function App() {
                     <span>รายงานผล (Export)</span>
                   </button>
                 )}
+                {(currentUser?.role === 'admin' || currentUser?.role === 'reporter') && (
+                  <button
+                    onClick={() => { setActiveTab('pdf_reports'); window.innerWidth < 768 && setIsSidebarOpen(false); }}
+                    className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl transition-colors ${activeTab === 'pdf_reports' ? 'bg-white/20 text-white shadow-md font-bold border-l-4 border-cyan-300' : 'hover:bg-white/10 hover:text-white'}`}
+                  >
+                    <BookOpen size={20} />
+                    <span>คลังรายงาน PDF</span>
+                  </button>
+                )}
                 {currentUser?.role === 'admin' && (
                   <>
                     <button
@@ -3162,6 +3474,7 @@ export default function App() {
                     {activeTab === 'dashboard' && 'แดชบอร์ดภาพรวม'}
                     {activeTab === 'activities' && 'ลงชื่อกิจกรรม'}
                     {activeTab === 'reports' && 'ออกรายงานผล'}
+                    {activeTab === 'pdf_reports' && 'คลังรายงาน PDF'}
                     {activeTab === 'groups' && 'จัดการกลุ่มบุคลากร'}
                     {activeTab === 'admin' && 'ตั้งค่าระบบ'}
                   </h1>
@@ -3210,6 +3523,7 @@ export default function App() {
                     {activeTab === 'dashboard' && 'แดชบอร์ดภาพรวม'}
                     {activeTab === 'activities' && 'ลงชื่อกิจกรรม'}
                     {activeTab === 'reports' && 'ออกรายงานผล'}
+                    {activeTab === 'pdf_reports' && 'คลังรายงาน PDF'}
                     {activeTab === 'groups' && 'จัดการกลุ่มบุคลากร'}
                     {activeTab === 'admin' && 'ตั้งค่าระบบ'}
                   </h1>
@@ -3343,6 +3657,7 @@ export default function App() {
                 {activeTab === 'groups' && <GroupManagementView />}
                 {activeTab === 'admin' && <AdminView />}
                 {activeTab === 'reports' && <ReportsView />}
+                {activeTab === 'pdf_reports' && <PdfReportsView />}
               </>
             ) : (
               activeTab !== 'dashboard' && activeTab !== 'login' && (
