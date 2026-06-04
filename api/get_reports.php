@@ -10,7 +10,13 @@ if ($activity_id === 0) {
 }
 
 try {
-    $stmtAct = $conn->prepare("SELECT id, group_id, activity_name as name, DATE_FORMAT(activity_date, '%d/%m/%Y') as date, attachment_path FROM activities WHERE id = :id");
+    // Auto-migrate: check and add report_images column if not exists
+    $checkCol = $conn->query("SHOW COLUMNS FROM activities LIKE 'report_images'");
+    if ($checkCol->rowCount() === 0) {
+        $conn->exec("ALTER TABLE activities ADD COLUMN report_images TEXT NULL");
+    }
+
+    $stmtAct = $conn->prepare("SELECT id, group_id, activity_name as name, DATE_FORMAT(activity_date, '%d/%m/%Y') as date, attachment_path, report_images FROM activities WHERE id = :id");
     $stmtAct->execute([':id' => $activity_id]);
     $activityInfo = $stmtAct->fetch(PDO::FETCH_ASSOC);
 

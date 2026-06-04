@@ -1091,23 +1091,75 @@ export default function App() {
     const [reportMode, setReportMode] = useState('single');
     const [summaryData, setSummaryData] = useState(null);
     const [attachedImages, setAttachedImages] = useState([]);
+    const [uploadingImages, setUploadingImages] = useState(false);
     const [signSettings, setSignSettings] = useState({ director: '', deputy: '', secretaries: {} });
 
-    const handleImageUpload = (e) => {
+    const handleImageUpload = async (e) => {
       const files = Array.from(e.target.files);
+      if (files.length === 0) return;
       if (files.length + attachedImages.length > 4) {
         alert("แนบรูปภาพได้สูงสุด 4 ภาพครับ");
         return;
       }
-      const newImages = files.map(file => URL.createObjectURL(file));
-      setAttachedImages([...attachedImages, ...newImages]);
+
+      setUploadingImages(true);
+      const newPaths = [...attachedImages];
+
+      try {
+        for (const file of files) {
+          const formData = new FormData();
+          formData.append('file', file);
+          const uploadRes = await fetch(`${API_URL}/upload_attachment.php`, {
+            method: 'POST',
+            body: formData
+          }).then(r => r.json());
+
+          if (uploadRes.status === 'success') {
+            newPaths.push(uploadRes.file_path);
+          } else {
+            alert("อัปโหลดไฟล์ล้มเหลว: " + uploadRes.message);
+          }
+        }
+
+        setAttachedImages(newPaths);
+
+        // Save to DB
+        if (selectedActivity) {
+          await fetch(`${API_URL}/save_report_images.php`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ activity_id: selectedActivity, report_images: newPaths })
+          }).then(r => r.json());
+        }
+      } catch (err) {
+        console.error(err);
+        alert("เกิดข้อผิดพลาดในการอัปโหลดภาพ");
+      } finally {
+        setUploadingImages(false);
+      }
     };
 
-    const removeImage = (index) => {
+    const removeImage = async (index) => {
+      if (reportData?.activity?.status === 'locked') {
+        alert("กิจกรรมนี้ถูกล็อคแล้ว ไม่สามารถลบรูปภาพได้");
+        return;
+      }
       const newImages = [...attachedImages];
-      URL.revokeObjectURL(newImages[index]);
       newImages.splice(index, 1);
       setAttachedImages(newImages);
+
+      // Save to DB
+      if (selectedActivity) {
+        try {
+          await fetch(`${API_URL}/save_report_images.php`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ activity_id: selectedActivity, report_images: newImages })
+          }).then(r => r.json());
+        } catch (err) {
+          console.error(err);
+        }
+      }
     };
 
     useEffect(() => {
@@ -1150,6 +1202,16 @@ export default function App() {
         .then(res => {
           if (res.status === 'success') {
             setReportData(res.data);
+            const reportImgs = res.data.activity.report_images;
+            if (reportImgs) {
+              try {
+                setAttachedImages(JSON.parse(reportImgs));
+              } catch (e) {
+                setAttachedImages([]);
+              }
+            } else {
+              setAttachedImages([]);
+            }
           }
           setLoadingData(false);
         });
@@ -1307,14 +1369,14 @@ export default function App() {
               <div className="space-y-4 text-sm">
                 <div>
                   <label className="block font-medium text-slate-700 mb-1">ภาคเรียน</label>
-                  <select value={selectedTerm} onChange={e => setSelectedTerm(e.target.value)} className="w-full bg-slate-50 border border-slate-300 rounded-lg p-2.5 outline-none">
+                  <select value={selectedTerm} onChange={e => { setSelectedTerm(e.target.value); setReportData(null); setAttachedImages([]); }} className="w-full bg-slate-50 border border-slate-300 rounded-lg p-2.5 outline-none">
                     {filters.terms.map(t => <option key={t.id} value={t.id}>{t.term_name}</option>)}
                   </select>
                 </div>
                 {reportMode === 'single' && (
                   <div>
                     <label className="block font-medium text-slate-700 mb-1">กิจกรรม</label>
-                    <select value={selectedActivity} onChange={e => setSelectedActivity(e.target.value)} className="w-full bg-slate-50 border border-slate-300 rounded-lg p-2.5 outline-none">
+                    <select value={selectedActivity} onChange={e => { setSelectedActivity(e.target.value); setReportData(null); setAttachedImages([]); }} className="w-full bg-slate-50 border border-slate-300 rounded-lg p-2.5 outline-none">
                       {filters.activities.map(a => <option key={a.id} value={a.id}>{a.activity_name}</option>)}
                     </select>
                   </div>
@@ -1333,19 +1395,25 @@ export default function App() {
                 </div>
               </div>
               <div className="space-y-4">
-                <label className="flex items-center justify-center w-full h-24 border-2 border-slate-300 border-dashed rounded-lg cursor-pointer bg-slate-50 hover:bg-slate-100 transition">
+                <label className={`flex flex-col items-center justify-center w-full h-24 border-2 border-slate-300 border-dashed rounded-lg bg-slate-50 hover:bg-slate-100 transition ${(!reportData || reportData?.activity?.status === 'locked' || uploadingImages) ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}>
                   <div className="flex flex-col items-center justify-center">
-                    <Plus size={24} className="text-slate-400 mb-1" />
-                    <p className="text-xs text-slate-500 font-medium">คลิกเลือกภาพ (สูงสุด 4 ภาพ)</p>
+                    {uploadingImages ? (
+                      <Loader2 className="animate-spin text-blue-500 mb-1" size={24} />
+                    ) : (
+                      <Plus size={24} className="text-slate-400 mb-1" />
+                    )}
+                    <p className="text-xs text-slate-500 font-medium">
+                      {uploadingImages ? "กำลังอัปโหลด..." : !reportData ? "กรุณาดึงข้อมูลรายงานก่อน" : reportData?.activity?.status === 'locked' ? "กิจกรรมถูกล็อคแล้ว" : "คลิกเลือกภาพ (สูงสุด 4 ภาพ)"}
+                    </p>
                   </div>
-                  <input type="file" className="hidden" multiple accept="image/*" onChange={handleImageUpload} disabled={attachedImages.length >= 4} />
+                  <input type="file" className="hidden" multiple accept="image/*" onChange={handleImageUpload} disabled={attachedImages.length >= 4 || !reportData || reportData?.activity?.status === 'locked' || uploadingImages} />
                 </label>
                 {attachedImages.length > 0 && (
                   <div className="grid grid-cols-2 gap-2">
                     {attachedImages.map((src, idx) => (
                       <div key={idx} className="relative group">
-                        <img src={src} className="w-full h-20 object-cover rounded-lg border border-slate-200" alt={`แนบ ${idx + 1}`} />
-                        <button onClick={() => removeImage(idx)} className="absolute -top-2 -right-2 bg-rose-500 text-white rounded-full p-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition shadow-sm">
+                        <img src={`${API_URL}/../${src}`} className="w-full h-20 object-cover rounded-lg border border-slate-200" alt={`แนบ ${idx + 1}`} />
+                        <button onClick={() => removeImage(idx)} className="absolute -top-2 -right-2 bg-rose-500 text-white rounded-full p-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition shadow-sm" disabled={reportData?.activity?.status === 'locked'}>
                           <X size={12} />
                         </button>
                       </div>
@@ -1480,7 +1548,7 @@ export default function App() {
                         <h3 className="text-xl font-bold mb-6 text-center">ภาพบรรยากาศ {reportData.activity.name}</h3>
                         <div className="flex flex-col gap-6 items-center w-full">
                           {pageImages.map((src, imgIdx) => (
-                            <img key={imgIdx} src={src} className="w-full object-contain border-2 border-slate-200 rounded max-h-[450px]" alt={`ภาพบรรยากาศ ${pageIdx * 2 + imgIdx + 1}`} />
+                            <img key={imgIdx} src={`${API_URL}/../${src}`} className="w-full object-contain border-2 border-slate-200 rounded max-h-[450px]" alt={`ภาพบรรยากาศ ${pageIdx * 2 + imgIdx + 1}`} />
                           ))}
                         </div>
                       </div>
