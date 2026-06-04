@@ -618,6 +618,7 @@ export default function App() {
     };
 
     const handleStatusChange = (staffId, status) => {
+      if (selectedActivity?.status === 'locked') return;
       setStaffList(staffList.map(s => s.id === staffId ? { ...s, status } : s));
     };
 
@@ -650,6 +651,7 @@ export default function App() {
     };
 
     const handleSaveProxy = (absentId, proxyId) => {
+      if (selectedActivity?.status === 'locked') return;
       if (!proxyId) return;
       const proxyPerson = allStaffForProxy.find(s => s.id === parseInt(proxyId));
       if (!proxyPerson) return;
@@ -668,6 +670,7 @@ export default function App() {
     };
 
     const handleDeleteProxy = (absentId) => {
+      if (selectedActivity?.status === 'locked') return;
       fetch(`${API_URL}/delete_proxy.php`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -1024,7 +1027,16 @@ export default function App() {
                       ดำเนินการลงชื่อ
                     </button>
                   ) : activity.status === 'completed' ? (
-                    <span className="px-3 py-1 bg-slate-100 text-slate-600 text-sm font-medium rounded-full border border-slate-200">เสร็จสิ้นแล้ว</span>
+                    currentUser?.role === 'admin' ? (
+                      <button
+                        onClick={() => handleSelectActivity(activity)}
+                        className="w-full md:w-auto px-4 py-2 bg-blue-50 text-blue-700 font-medium rounded-lg border border-blue-200 hover:bg-blue-100 transition"
+                      >
+                        แก้ไขการลงชื่อ
+                      </button>
+                    ) : (
+                      <span className="px-3 py-1 bg-slate-100 text-slate-600 text-sm font-medium rounded-full border border-slate-200">เสร็จสิ้นแล้ว</span>
+                    )
                   ) : (
                     <span className="px-3 py-1 bg-amber-50 text-amber-600 text-sm font-medium rounded-full border border-amber-200">ยังไม่ถึงกำหนด</span>
                   )}
