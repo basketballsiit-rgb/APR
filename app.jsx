@@ -24,8 +24,20 @@ export default function App() {
     const userStr = localStorage.getItem('srs_user');
     if (userStr) {
       try {
-        setCurrentUser(JSON.parse(userStr));
+        const parsed = JSON.parse(userStr);
+        setCurrentUser(parsed);
         setIsAuthenticated(true);
+
+        // Fetch latest profile/role from DB to prevent stale session
+        fetch(`${API_URL}/get_user_role.php?staff_id=${parsed.id}`)
+          .then(res => res.json())
+          .then(res => {
+            if (res.status === 'success') {
+              localStorage.setItem('srs_user', JSON.stringify(res.user));
+              setCurrentUser(res.user);
+            }
+          })
+          .catch(console.error);
       } catch(e){}
     }
   }, []);
@@ -2144,6 +2156,16 @@ export default function App() {
         if (res.status === 'success') {
           setEditingStaffId(null);
           fetchAllStaff();
+          if (editingStaffId === currentUser?.id) {
+            fetch(`${API_URL}/get_user_role.php?staff_id=${editingStaffId}`)
+              .then(r => r.json())
+              .then(r => {
+                if (r.status === 'success') {
+                  localStorage.setItem('srs_user', JSON.stringify(r.user));
+                  setCurrentUser(r.user);
+                }
+              }).catch(console.error);
+          }
         } else {
           alert('แก้ไขไม่สำเร็จ: ' + res.message);
         }
@@ -2569,6 +2591,11 @@ export default function App() {
                                   }).then(r => r.json()).then(r => {
                                     if (r.status === 'success') {
                                       setAllStaff(prev => prev.map(s => s.id === row.id ? { ...s, role: newRole } : s));
+                                      if (row.id === currentUser?.id) {
+                                        const updatedUser = { ...currentUser, role: newRole };
+                                        setCurrentUser(updatedUser);
+                                        localStorage.setItem('srs_user', JSON.stringify(updatedUser));
+                                      }
                                     } else alert('เปลี่ยนสิทธิ์ไม่สำเร็จ: ' + r.message);
                                   });
                                 }}

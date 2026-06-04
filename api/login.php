@@ -49,7 +49,7 @@ try {
     }
 
     // 2. ถ้าเข้าสู่ระบบสำเร็จ ให้ดึงข้อมูลพนักงานจากระบบ
-    $stmt = $conn->prepare("SELECT id, staff_code, full_name, group_id FROM staffs WHERE staff_code = ? AND is_active = 1");
+    $stmt = $conn->prepare("SELECT id, staff_code, full_name, group_id, COALESCE(role, 'user') as role FROM staffs WHERE staff_code = ? AND is_active = 1");
     $stmt->execute([$username]);
     $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
