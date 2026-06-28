@@ -2653,10 +2653,10 @@ export default function App() {
     };
 
     const [kcConfig, setKcConfig] = useState({
-      url: 'http://service.npc.ac.th',
+      url: 'https://service.npc.ac.th',
       realm: 'NPC-SSO',
       client_id: 'apr-app',
-      client_secret: 'foJMT0AEt1yNlFAtaqouuYQbhp4iCcVc'
+      client_secret: 'K62pg9c3dsKql6U9lxSNwyp8KdMN5ylc'
     });
     const [isSyncingKc, setIsSyncingKc] = useState(false);
     const [syncError, setSyncError] = useState(null);

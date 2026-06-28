@@ -8,10 +8,10 @@ try {
     $password = $data['password'] ?? '';
     
     // Keycloak config (Can be adjusted if stored in DB)
-    $kc_url = 'http://service.npc.ac.th';
+    $kc_url = 'https://service.npc.ac.th';
     $realm = 'NPC-SSO';
     $client_id = 'apr-app';
-    $client_secret = 'foJMT0AEt1yNlFAtaqouuYQbhp4iCcVc';
+    $client_secret = 'K62pg9c3dsKql6U9lxSNwyp8KdMN5ylc';
 
     if (empty($username) || empty($password)) {
         throw new Exception("กรุณากรอกข้อมูลให้ครบถ้วน");
