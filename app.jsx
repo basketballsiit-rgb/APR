@@ -3367,7 +3367,7 @@ export default function App() {
                             <td className="px-4 py-3 text-center">
                               <div className="flex justify-center gap-2">
                                 <a
-                                  href={`${API_URL}/../backups/${b.filename}`}
+                                  href={`${API_URL}/../uploads/backups/${b.filename}`}
                                   download
                                   className="inline-flex items-center gap-1 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 px-2 py-1 rounded text-xs font-semibold transition shadow-sm"
                                 >

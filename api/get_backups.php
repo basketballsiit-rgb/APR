@@ -3,7 +3,7 @@
 require_once 'config.php';
 
 try {
-    $backup_dir = '../backups/';
+    $backup_dir = '../uploads/backups/';
     $backups = [];
 
     if (is_dir($backup_dir)) {

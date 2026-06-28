@@ -18,7 +18,7 @@ try {
         throw new Exception("ชื่อไฟล์ไม่ถูกต้องเพื่อความปลอดภัย");
     }
 
-    $file_path = '../backups/' . $filename;
+    $file_path = '../uploads/backups/' . $filename;
 
     if (!file_exists($file_path)) {
         throw new Exception("ไม่พบไฟล์สำรองข้อมูลบนเซิร์ฟเวอร์");

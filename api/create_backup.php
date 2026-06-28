@@ -4,7 +4,7 @@ require_once 'config.php';
 
 try {
     // 1. Create backups folder if not exists
-    $backup_dir = '../backups/';
+    $backup_dir = '../uploads/backups/';
     if (!is_dir($backup_dir)) {
         if (!mkdir($backup_dir, 0755, true)) {
             throw new Exception("ไม่สามารถสร้างโฟลเดอร์ backups ได้");
