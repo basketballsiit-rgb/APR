@@ -2260,6 +2260,66 @@ export default function App() {
     const [testingLine, setTestingLine] = useState(false);
     const [uploadingManual, setUploadingManual] = useState(false);
 
+    // --- Backup System State ---
+    const [backupsList, setBackupsList] = useState([]);
+    const [isCreatingBackup, setIsCreatingBackup] = useState(false);
+    const [isFetchingBackups, setIsFetchingBackups] = useState(false);
+
+    const fetchBackups = () => {
+      setIsFetchingBackups(true);
+      fetch(`${API_URL}/get_backups.php`)
+        .then(res => res.json())
+        .then(res => {
+          setIsFetchingBackups(false);
+          if (res.status === 'success') {
+            setBackupsList(res.data || []);
+          }
+        })
+        .catch(() => {
+          setIsFetchingBackups(false);
+        });
+    };
+
+    const handleCreateBackup = () => {
+      setIsCreatingBackup(true);
+      fetch(`${API_URL}/create_backup.php`, {
+        method: 'POST'
+      })
+        .then(res => res.json())
+        .then(res => {
+          setIsCreatingBackup(false);
+          if (res.status === 'success') {
+            alert('✅ ' + res.message);
+            fetchBackups();
+          } else {
+            alert('เกิดข้อผิดพลาด: ' + res.message);
+          }
+        })
+        .catch(() => {
+          setIsCreatingBackup(false);
+          alert('เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์');
+        });
+    };
+
+    const handleDeleteBackup = (filename) => {
+      if (!confirm('ยืนยันที่จะลบไฟล์สำรองข้อมูลนี้จากเซิร์ฟเวอร์?')) return;
+      fetch(`${API_URL}/delete_backup.php`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ filename })
+      })
+        .then(res => res.json())
+        .then(res => {
+          if (res.status === 'success') {
+            alert('ลบไฟล์สำรองข้อมูลสำเร็จ');
+            fetchBackups();
+          } else {
+            alert('ลบไม่สำเร็จ: ' + res.message);
+          }
+        })
+        .catch(console.error);
+    };
+
     const handleUploadManual = async (e) => {
       const file = e.target.files[0];
       if (!file) return;
@@ -2448,6 +2508,7 @@ export default function App() {
       fetchAllGroups();
       fetchSettings();
       fetchAdminTerms();
+      fetchBackups();
     }, []);
 
     const handleDeleteStaff = (id) => {
@@ -3254,6 +3315,80 @@ export default function App() {
                     {uploadingManual ? 'กำลังอัปโหลด...' : 'เลือกไฟล์คู่มือ (PDF)'}
                   </label>
                 </div>
+              </div>
+            </div>
+
+            {/* Database Backup Section */}
+            <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6 space-y-5">
+              <div className="flex justify-between items-center border-b border-slate-100 pb-3 flex-wrap gap-2">
+                <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">
+                  <Save size={18} className="text-blue-500" /> ระบบสำรองข้อมูลระบบ (Database Backup)
+                </h3>
+                <button
+                  onClick={handleCreateBackup}
+                  disabled={isCreatingBackup}
+                  className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium text-sm transition disabled:opacity-50 shadow-sm"
+                >
+                  {isCreatingBackup ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
+                  {isCreatingBackup ? 'กำลังสำรองข้อมูล...' : 'สร้างไฟล์สำรองข้อมูลฐานข้อมูล'}
+                </button>
+              </div>
+              
+              <div className="space-y-3">
+                <p className="text-sm text-slate-600">
+                  สำรองข้อมูลโครงสร้างตารางและข้อมูลดิบทั้งหมดของฐานข้อมูลออกมาเป็นไฟล์ <strong>.sql</strong> บันทึกเก็บไว้บนเซิร์ฟเวอร์ และคุณสามารถดาวน์โหลดเก็บไว้ในเครื่องคอมพิวเตอร์ของคุณเพื่อความปลอดภัยได้ ส่วนไฟล์แนบและรายงาน PDF ต่างๆ จะถูกจัดเก็บอยู่ในโฟลเดอร์ <code className="bg-slate-100 px-1.5 py-0.5 rounded text-xs">uploads/</code> ของเซิร์ฟเวอร์ตามเดิม
+                </p>
+
+                {isFetchingBackups ? (
+                  <div className="flex justify-center py-4">
+                    <Loader2 className="animate-spin text-blue-500" size={24} />
+                  </div>
+                ) : backupsList.length === 0 ? (
+                  <div className="text-center py-6 border border-dashed border-slate-200 rounded-xl text-slate-400 text-sm">
+                    ยังไม่มีไฟล์สำรองข้อมูลในระบบในขณะนี้
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto border border-slate-200 rounded-xl">
+                    <table className="w-full text-left text-xs text-slate-600 border-collapse">
+                      <thead>
+                        <tr className="bg-slate-50 border-b border-slate-200">
+                          <th className="px-4 py-3 font-semibold text-slate-700">ชื่อไฟล์สำรอง (.sql)</th>
+                          <th className="px-4 py-3 font-semibold text-slate-700 w-32 text-center">ขนาดไฟล์</th>
+                          <th className="px-4 py-3 font-semibold text-slate-700 w-44 text-center">วันที่สร้าง</th>
+                          <th className="px-4 py-3 font-semibold text-slate-700 w-36 text-center">จัดการ</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100">
+                        {backupsList.map((b, i) => (
+                          <tr key={i} className="hover:bg-slate-50/50 transition">
+                            <td className="px-4 py-3 font-medium text-slate-800 break-all">{b.filename}</td>
+                            <td className="px-4 py-3 text-center text-slate-600 font-mono">{b.size}</td>
+                            <td className="px-4 py-3 text-center text-slate-500">{b.created_at}</td>
+                            <td className="px-4 py-3 text-center">
+                              <div className="flex justify-center gap-2">
+                                <a
+                                  href={`${API_URL}/../backups/${b.filename}`}
+                                  download
+                                  className="inline-flex items-center gap-1 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 px-2 py-1 rounded text-xs font-semibold transition shadow-sm"
+                                >
+                                  <Download size={12} />
+                                  ดาวน์โหลด
+                                </a>
+                                <button
+                                  onClick={() => handleDeleteBackup(b.filename)}
+                                  className="inline-flex items-center gap-1 bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 px-2 py-1 rounded text-xs font-semibold transition shadow-sm"
+                                >
+                                  <Trash size={12} />
+                                  ลบ
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
               </div>
             </div>
 
