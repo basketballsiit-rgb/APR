@@ -11,7 +11,7 @@ try {
     $kc_url = 'https://service.npc.ac.th';
     $realm = 'NPC-SSO';
     $client_id = 'apr-app';
-    $client_secret = 'K62pg9c3dsKql6U9lxSNwyp8KdMN5ylc';
+    $client_secret = 'okTBeJblJmeNL8szsuNija3t6OqkZSx9';
 
     if (empty($username) || empty($password)) {
         throw new Exception("กรุณากรอกข้อมูลให้ครบถ้วน");

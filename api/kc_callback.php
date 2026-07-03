@@ -2,7 +2,7 @@
 require_once 'config.php';
 
 $client_id = 'apr-app';
-$client_secret = 'K62pg9c3dsKql6U9lxSNwyp8KdMN5ylc';
+$client_secret = 'okTBeJblJmeNL8szsuNija3t6OqkZSx9';
 // Auto-detect protocol and host
 $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' || $_SERVER['SERVER_PORT'] == 443) ? "https://" : "http://";
 $host = $_SERVER['HTTP_HOST'];
