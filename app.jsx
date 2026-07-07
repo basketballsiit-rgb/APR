@@ -914,7 +914,7 @@ export default function App() {
           {/* Proxy Selection Modal */}
           {proxyModal ? (
             <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-              <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 animate-fade-in">
+              <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 animate-fade-in max-h-[90vh] overflow-y-auto">
                 <h3 className="text-lg font-bold text-slate-800 mb-1">ระบุตัวแทนการเข้าร่วม</h3>
                 <p className="text-sm text-slate-500 mb-5">
                   เลือกบุคลากรที่จะเข้าร่วมแทน <span className="font-semibold text-indigo-700">{proxyModal.absentName}</span>
@@ -1049,7 +1049,7 @@ export default function App() {
         {/* Create Activity Modal */}
         {showCreateModal && (
           <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 animate-fade-in">
+            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 animate-fade-in max-h-[90vh] overflow-y-auto">
               <div className="flex justify-between items-center mb-4">
                 <h3 className="text-lg font-bold text-slate-800">{newActivity.id ? 'แก้ไขกิจกรรม' : 'สร้างกิจกรรมใหม่'}</h3>
                 <button onClick={() => setShowCreateModal(false)} className="text-slate-400 hover:text-slate-600"><X size={20} /></button>
