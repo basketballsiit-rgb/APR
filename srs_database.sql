@@ -71,7 +71,7 @@ CREATE TABLE `users` (
 
 INSERT INTO `terms` (`term_name`, `is_active`) VALUES ('1/2569', 1), ('2/2568', 0);
 
-INSERT INTO `staff_groups` (`group_name`) VALUES ('กลุ่ม 1'), ('กลุ่ม 2'), ('กลุ่ม 3');
+INSERT INTO `staff_groups` (`group_name`) VALUES ('กลุ่ม 1'), ('กลุ่ม 2'), ('กลุ่ม 3'), ('รายวิชาระยะสั้น');
 
 INSERT INTO `staffs` (`staff_code`, `full_name`, `position`, `group_id`) VALUES 
 ('101', 'นายสมชาย ใจดี', 'ครูผู้สอน', 1),
