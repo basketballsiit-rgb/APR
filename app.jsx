@@ -416,8 +416,7 @@ export default function App() {
 
 
         {/* ===== OVERALL STATS ===== */}
-        {!currentUser?.id && (
-          <div className="space-y-8">
+        <div className="space-y-8">
             <div>
           <h2 className="text-xl font-bold text-slate-700 mb-4 flex items-center gap-2">
             <LayoutDashboard size={20} className="text-blue-500" /> แดชบอร์ดภาพรวม
@@ -524,7 +523,6 @@ export default function App() {
         </div>
 
         </div>
-        )}
       </div>
     );
 
