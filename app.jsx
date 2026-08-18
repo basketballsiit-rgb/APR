@@ -288,7 +288,7 @@ export default function App() {
       <div className="space-y-8 animate-fade-in">
 
         {/* ===== PERSONAL CARD ===== */}
-        {currentUser?.id && currentUser?.role !== 'admin' && (
+        {currentUser?.id && currentUser?.staff_code !== 'admin' && (
           <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
             {/* Header */}
             <div className="px-6 py-5 bg-gradient-to-r from-blue-600 via-sky-500 to-cyan-400 flex items-center justify-between">
