@@ -472,50 +472,70 @@ export default function App() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {chartData.map((data, idx) => {
               const colorThemes = [
-                { border: 'border-t-blue-500',    bg: 'bg-blue-50/40',    text: 'text-blue-800',    badge: 'bg-blue-100 text-blue-700' },
-                { border: 'border-t-purple-500',  bg: 'bg-purple-50/40',  text: 'text-purple-800',  badge: 'bg-purple-100 text-purple-700' },
-                { border: 'border-t-emerald-500', bg: 'bg-emerald-50/40', text: 'text-emerald-800', badge: 'bg-emerald-100 text-emerald-700' },
-                { border: 'border-t-orange-500',  bg: 'bg-orange-50/40',  text: 'text-orange-800',  badge: 'bg-orange-100 text-orange-700' },
-                { border: 'border-t-pink-500',    bg: 'bg-pink-50/40',    text: 'text-pink-800',    badge: 'bg-pink-100 text-pink-700' },
-                { border: 'border-t-indigo-500',  bg: 'bg-indigo-50/40',  text: 'text-indigo-800',  badge: 'bg-indigo-100 text-indigo-700' },
+                { border: 'border-t-blue-500',    bg: 'bg-blue-50/40',    text: 'text-blue-800',    badge: 'bg-blue-100 text-blue-700',    bar: 'bg-blue-500'    },
+                { border: 'border-t-purple-500',  bg: 'bg-purple-50/40',  text: 'text-purple-800',  badge: 'bg-purple-100 text-purple-700',  bar: 'bg-purple-500'  },
+                { border: 'border-t-emerald-500', bg: 'bg-emerald-50/40', text: 'text-emerald-800', badge: 'bg-emerald-100 text-emerald-700', bar: 'bg-emerald-500' },
+                { border: 'border-t-orange-500',  bg: 'bg-orange-50/40',  text: 'text-orange-800',  badge: 'bg-orange-100 text-orange-700',  bar: 'bg-orange-500'  },
+                { border: 'border-t-pink-500',    bg: 'bg-pink-50/40',    text: 'text-pink-800',    badge: 'bg-pink-100 text-pink-700',    bar: 'bg-pink-500'    },
+                { border: 'border-t-indigo-500',  bg: 'bg-indigo-50/40',  text: 'text-indigo-800',  badge: 'bg-indigo-100 text-indigo-700',  bar: 'bg-indigo-500'  },
               ];
               const theme = colorThemes[idx % colorThemes.length];
+              const totalRecorded = data['เข้าร่วม'] + data['ขาด'];
+              const rate = totalRecorded > 0 ? Math.round((data['เข้าร่วม'] / totalRecorded) * 100) : null;
+              const hasActivities = data['จำนวนกิจกรรม'] > 0;
+
               return (
-                <div key={idx} className={`p-4 border border-slate-200 shadow-sm hover:shadow-md transition rounded-xl flex flex-col h-full relative overflow-hidden group border-t-4 ${theme.border} ${theme.bg}`}>
-                  <div className="relative z-10 flex flex-col h-full">
-                    <div className="flex justify-between items-start mb-4 pb-3 border-b border-slate-200/60">
-                      <div>
-                        <h4 className={`font-bold text-base ${theme.text}`}>{data.name}</h4>
-                        <span className={`inline-block mt-1 text-[10px] px-2 py-0.5 rounded-full font-semibold ${theme.badge}`}>
-                          ทั้งหมด {data['จำนวนคนทั้งกลุ่ม']} คน • จัดแล้ว {data['จำนวนกิจกรรม']} ครั้ง
-                        </span>
-                      </div>
+                <div key={idx} className={`p-5 border border-slate-200 shadow-sm hover:shadow-md transition rounded-xl flex flex-col gap-4 relative overflow-hidden border-t-4 ${theme.border} ${theme.bg}`}>
+                  {/* Header */}
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h4 className={`font-bold text-base ${theme.text}`}>{data.name}</h4>
+                      <span className={`inline-block mt-1 text-[10px] px-2 py-0.5 rounded-full font-semibold ${theme.badge}`}>
+                        {data['จำนวนคนทั้งกลุ่ม']} คน • จัดแล้ว {data['จำนวนกิจกรรม']} ครั้ง
+                      </span>
                     </div>
-                    <div className="flex-1 space-y-3">
-                      <div className="bg-[#f8fbff] rounded-lg p-3 border border-blue-50/80 flex flex-col gap-2">
-                        <div className="flex items-center gap-2 text-blue-800">
-                          <Users size={14} /> <span className="font-bold text-sm">ผู้เข้าร่วม</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs text-blue-600/70">จำนวนคนแยกตามครั้ง:</span>
-                          <span className="px-2 py-1 bg-white border border-blue-100 rounded text-blue-700 font-mono font-bold text-sm tracking-widest shadow-sm">
-                            {data['รายละเอียดเข้าร่วม']}
-                          </span>
-                        </div>
+                    {rate !== null ? (
+                      <div className="text-right">
+                        <span className={`text-2xl font-black ${rate >= 80 ? 'text-emerald-600' : rate >= 60 ? 'text-amber-600' : 'text-rose-600'}`}>{rate}%</span>
+                        <p className="text-[10px] text-slate-400 mt-0.5">อัตราเข้าร่วม</p>
                       </div>
-                      <div className="bg-[#fff9fa] rounded-lg p-3 border border-rose-50/80 flex flex-col gap-2">
-                        <div className="flex items-center gap-2 text-rose-800">
-                          <LogOut size={14} /> <span className="font-bold text-sm">ผู้ที่ขาด/ลา</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs text-rose-600/70">จำนวนคนแยกตามครั้ง:</span>
-                          <span className="px-2 py-1 bg-white border border-rose-100 rounded text-rose-700 font-mono font-bold text-sm tracking-widest shadow-sm">
-                            {data['รายละเอียดขาด']}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
+                    ) : (
+                      <span className="text-[11px] text-slate-400 bg-slate-100 px-2 py-1 rounded-full">ยังไม่บันทึก</span>
+                    )}
                   </div>
+
+                  {/* Progress Bar */}
+                  {hasActivities && (
+                    <div>
+                      <div className="w-full bg-slate-200 rounded-full h-2.5 overflow-hidden">
+                        <div
+                          className={`h-2.5 rounded-full transition-all duration-500 ${theme.bar}`}
+                          style={{ width: `${rate ?? 0}%` }}
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Stats Row */}
+                  {hasActivities ? (
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="bg-white/70 rounded-lg p-3 border border-emerald-100 text-center">
+                        <p className="text-xl font-black text-emerald-600">{data['เข้าร่วม']}</p>
+                        <p className="text-[10px] text-slate-500 mt-0.5">เข้าร่วม (ครั้ง-คน)</p>
+                        <p className="text-[9px] text-slate-400 font-mono">{data['รายละเอียดเข้าร่วม']}</p>
+                      </div>
+                      <div className="bg-white/70 rounded-lg p-3 border border-rose-100 text-center">
+                        <p className="text-xl font-black text-rose-600">{data['ขาด']}</p>
+                        <p className="text-[10px] text-slate-500 mt-0.5">ขาด/ลา (ครั้ง-คน)</p>
+                        <p className="text-[9px] text-slate-400 font-mono">{data['รายละเอียดขาด']}</p>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="text-center py-3 text-slate-400 text-sm">
+                      <CalendarCheck size={24} className="mx-auto mb-1 opacity-30" />
+                      ยังไม่มีกิจกรรมในกลุ่มนี้
+                    </div>
+                  )}
                 </div>
               );
             })}
