@@ -20,11 +20,12 @@ $totalActivities = $stmt->fetch(PDO::FETCH_ASSOC)['total'];
 $stmt = $conn->prepare("
     SELECT 
         COUNT(att.id) as total_attendance,
-        SUM(CASE WHEN att.status = 'present' THEN 1 ELSE 0 END) as total_present
+        SUM(CASE WHEN att.status = 'present' OR ap.id IS NOT NULL THEN 1 ELSE 0 END) as total_present
     FROM act_attendance att
     JOIN activities a ON att.activity_id = a.id
     JOIN terms t ON a.term_id = t.id
-    WHERE t.is_active = 1 AND att.status != 'pending'
+    LEFT JOIN act_proxy ap ON ap.activity_id = att.activity_id AND ap.absent_id = att.staff_id
+    WHERE t.is_active = 1 AND (att.status != 'pending' OR ap.id IS NOT NULL)
 ");
 $stmt->execute();
 $attendanceData = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -62,14 +63,15 @@ $stmtAtt = $conn->query("
     SELECT 
         sg.id as group_id,
         a.id as activity_id,
-        SUM(CASE WHEN att.status = 'present' THEN 1 ELSE 0 END) as present_cnt,
-        SUM(CASE WHEN att.status IN ('absent', 'leave') THEN 1 ELSE 0 END) as absent_cnt
+        SUM(CASE WHEN att.status = 'present' OR ap.id IS NOT NULL THEN 1 ELSE 0 END) as present_cnt,
+        SUM(CASE WHEN att.status IN ('absent', 'leave') AND ap.id IS NULL THEN 1 ELSE 0 END) as absent_cnt
     FROM staff_groups sg
     JOIN staff_group_assignments sga ON sg.id = sga.group_id
     JOIN act_attendance att ON sga.staff_id = att.staff_id
     JOIN activities a ON att.activity_id = a.id AND a.group_id = sg.id
     JOIN terms t ON a.term_id = t.id
-    WHERE t.is_active = 1 AND att.status != 'pending'
+    LEFT JOIN act_proxy ap ON ap.activity_id = att.activity_id AND ap.absent_id = att.staff_id
+    WHERE t.is_active = 1 AND (att.status != 'pending' OR ap.id IS NOT NULL)
     GROUP BY sg.id, a.id
     ORDER BY a.activity_date ASC, a.id ASC
 ");

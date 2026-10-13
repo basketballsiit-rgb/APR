@@ -109,8 +109,8 @@ try {
             $is_in_group = ($act['group_id'] == 0 || in_array($act['group_id'], $s['group_ids_array']));
             
             if ($is_in_group) {
-                // หากมาเข้าร่วมปกติก็นับว่า 'เข้าร่วม'
-                if (isset($attendanceLookup[$s['id']][$act['id']])) {
+                // หากมาเข้าร่วมปกติ หรือมีผู้มาแทน (proxy) ก็นับว่า 'เข้าร่วม'
+                if (isset($attendanceLookup[$s['id']][$act['id']]) || isset($proxyLookup[$s['id']][$act['id']])) {
                     $s['attended']++;
                 }
             }
