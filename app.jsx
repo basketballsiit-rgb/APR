@@ -482,7 +482,8 @@ export default function App() {
               const theme = colorThemes[idx % colorThemes.length];
               const totalRecorded = data['เข้าร่วม'] + data['ขาด'];
               const rate = totalRecorded > 0 ? Math.round((data['เข้าร่วม'] / totalRecorded) * 100) : null;
-              const hasActivities = data['จำนวนกิจกรรม'] > 0;
+              const hasActivities = data['จำนวนกิจกรรม'] > 0;        // มีกิจกรรมในเทอม
+              const hasRecorded   = (data['จำนวนกิจกรรมบันทึก'] ?? 0) > 0; // บันทึกสถานะแล้ว
 
               return (
                 <div key={idx} className={`p-5 border border-slate-200 shadow-sm hover:shadow-md transition rounded-xl flex flex-col gap-4 relative overflow-hidden border-t-4 ${theme.border} ${theme.bg}`}>
@@ -499,13 +500,15 @@ export default function App() {
                         <span className={`text-2xl font-black ${rate >= 80 ? 'text-emerald-600' : rate >= 60 ? 'text-amber-600' : 'text-rose-600'}`}>{rate}%</span>
                         <p className="text-[10px] text-slate-400 mt-0.5">อัตราเข้าร่วม</p>
                       </div>
+                    ) : hasActivities ? (
+                      <span className="text-[11px] text-amber-600 bg-amber-50 border border-amber-200 px-2 py-1 rounded-full">รอบันทึก</span>
                     ) : (
-                      <span className="text-[11px] text-slate-400 bg-slate-100 px-2 py-1 rounded-full">ยังไม่บันทึก</span>
+                      <span className="text-[11px] text-slate-400 bg-slate-100 px-2 py-1 rounded-full">ยังไม่มีกิจกรรม</span>
                     )}
                   </div>
 
-                  {/* Progress Bar */}
-                  {hasActivities && (
+                  {/* Progress Bar — แสดงเมื่อมีการบันทึกแล้ว */}
+                  {hasRecorded && (
                     <div>
                       <div className="w-full bg-slate-200 rounded-full h-2.5 overflow-hidden">
                         <div
@@ -517,7 +520,7 @@ export default function App() {
                   )}
 
                   {/* Stats Row */}
-                  {hasActivities ? (
+                  {hasRecorded ? (
                     <div className="grid grid-cols-2 gap-3">
                       <div className="bg-white/70 rounded-lg p-3 border border-emerald-100 text-center">
                         <p className="text-xl font-black text-emerald-600">{data['เข้าร่วม']}</p>
@@ -529,6 +532,11 @@ export default function App() {
                         <p className="text-[10px] text-slate-500 mt-0.5">ขาด/ลา (ครั้ง-คน)</p>
                         <p className="text-[9px] text-slate-400 font-mono">{data['รายละเอียดขาด']}</p>
                       </div>
+                    </div>
+                  ) : hasActivities ? (
+                    <div className="text-center py-3 text-amber-500 text-sm bg-amber-50 rounded-lg border border-amber-100">
+                      <CalendarCheck size={24} className="mx-auto mb-1 opacity-60" />
+                      มีกิจกรรม {data['จำนวนกิจกรรม']} ครั้ง • รอบันทึกสถานะ
                     </div>
                   ) : (
                     <div className="text-center py-3 text-slate-400 text-sm">

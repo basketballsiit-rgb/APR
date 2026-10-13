@@ -40,10 +40,24 @@ $stmtGroups = $conn->query("
     FROM staff_groups sg
     LEFT JOIN staff_group_assignments sga ON sg.id = sga.group_id
     GROUP BY sg.id
+    ORDER BY sg.id ASC
 ");
 $groups = $stmtGroups->fetchAll(PDO::FETCH_ASSOC);
 
-// ดึงการเข้ากิจกรรมของแต่ละกลุ่ม (เฉพาะเทอมปัจจุบัน และเฉพาะกิจกรรมของกลุ่มนั้นเอง)
+// นับจำนวนกิจกรรมต่อกลุ่มในเทอมปัจจุบัน (นับทุกสถานะ ไม่เฉพาะที่บันทึกแล้ว)
+$stmtActCount = $conn->query("
+    SELECT a.group_id, COUNT(a.id) as act_count
+    FROM activities a
+    JOIN terms t ON a.term_id = t.id
+    WHERE t.is_active = 1
+    GROUP BY a.group_id
+");
+$actCountMap = [];
+foreach ($stmtActCount->fetchAll(PDO::FETCH_ASSOC) as $row) {
+    $actCountMap[$row['group_id']] = (int)$row['act_count'];
+}
+
+// ดึงการเข้ากิจกรรมของแต่ละกลุ่ม (เฉพาะที่บันทึกแล้ว ไม่ใช่ pending)
 $stmtAtt = $conn->query("
     SELECT 
         sg.id as group_id,
@@ -66,6 +80,7 @@ foreach ($groups as $g) {
     $groupStats[$g['id']] = [
         'name' => $g['name'],
         'total_members' => $g['total_members'],
+        'act_count_total' => $actCountMap[$g['id']] ?? 0, // ทุกกิจกรรมในเทอม
         'presents' => [],
         'absents' => [],
         'total_present_all' => 0,
@@ -85,23 +100,21 @@ foreach ($attendances as $row) {
 
 $chartData = [];
 foreach ($groupStats as $gid => $stats) {
-    $act_count = count($stats['presents']); 
-    if ($act_count > 0) {
-        $detailStr = implode('/', $stats['presents']);
-        $absentStr = implode('/', $stats['absents']);
-    } else {
-        $detailStr = '0';
-        $absentStr = '0';
-    }
+    $act_count_total = $stats['act_count_total']; // จำนวนกิจกรรมจริงในเทอม
+    $act_recorded    = count($stats['presents']);  // จำนวนที่บันทึกสถานะแล้ว
+
+    $detailStr = $act_recorded > 0 ? implode('/', $stats['presents']) : '-';
+    $absentStr = $act_recorded > 0 ? implode('/', $stats['absents'])  : '-';
 
     $chartData[] = [
-        "name" => $stats['name'],
-        "เข้าร่วม" => $stats['total_present_all'],
-        "ขาด" => $stats['total_absent_all'],
-        "รายละเอียดเข้าร่วม" => $detailStr,
-        "รายละเอียดขาด" => $absentStr,
-        "จำนวนกิจกรรม" => $act_count,
-        "จำนวนคนทั้งกลุ่ม" => $stats['total_members']
+        "name"                => $stats['name'],
+        "เข้าร่วม"            => $stats['total_present_all'],
+        "ขาด"                 => $stats['total_absent_all'],
+        "รายละเอียดเข้าร่วม"  => $detailStr,
+        "รายละเอียดขาด"       => $absentStr,
+        "จำนวนกิจกรรม"        => $act_count_total,
+        "จำนวนกิจกรรมบันทึก"  => $act_recorded,
+        "จำนวนคนทั้งกลุ่ม"    => $stats['total_members']
     ];
 }
 
