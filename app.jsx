@@ -897,19 +897,29 @@ export default function App() {
                     {staffList.map((staff) => {
                       const proxy = proxyMap[staff.id];
                       return (
-                        <tr key={staff.id} className={`border-b border-slate-100 hover:bg-slate-50 transition ${staff.status === 'pending' ? 'bg-amber-50/50' : ''}`}>
+                        <tr key={staff.id} className={`border-b border-slate-100 hover:bg-slate-50 transition ${staff.status === 'pending' && !proxyMap[staff.id] ? 'bg-amber-50/50' : ''} ${proxyMap[staff.id] ? 'bg-indigo-50/30' : ''}`}>
                           <td className="px-6 py-4 whitespace-nowrap font-medium text-slate-900">{staff.name}</td>
                           <td className="px-6 py-4">
-                            <div className="flex justify-center space-x-2 md:space-x-4">
-                              <label className={`flex items-center space-x-1 md:space-x-2 cursor-pointer px-2 py-1 rounded transition ${staff.status === 'present' ? 'bg-emerald-100 text-emerald-700 font-bold' : 'text-emerald-600 hover:bg-emerald-50'}`}>
-                                <input type="radio" name={`status-${staff.id}`} className="hidden" checked={staff.status === 'present'} onChange={() => handleStatusChange(staff.id, 'present')} />
-                                <span>มา</span>
-                              </label>
-                              <label className={`flex items-center space-x-1 md:space-x-2 cursor-pointer px-2 py-1 rounded transition ${staff.status === 'absent' ? 'bg-rose-100 text-rose-700 font-bold' : 'text-rose-500 hover:bg-rose-50'}`}>
-                                <input type="radio" name={`status-${staff.id}`} className="hidden" checked={staff.status === 'absent'} onChange={() => handleStatusChange(staff.id, 'absent')} />
-                                <span>ขาด</span>
-                              </label>
-                            </div>
+                            {proxyMap[staff.id] ? (
+                              /* มีตัวแทน → แสดง badge สถานะแทนปุ่ม */
+                              <div className="flex justify-center">
+                                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-indigo-100 text-indigo-700 text-xs font-semibold border border-indigo-200">
+                                  🤝 ส่งตัวแทน
+                                </span>
+                              </div>
+                            ) : (
+                              /* ไม่มีตัวแทน → แสดงปุ่มมา/ขาดตามปกติ */
+                              <div className="flex justify-center space-x-2 md:space-x-4">
+                                <label className={`flex items-center space-x-1 md:space-x-2 cursor-pointer px-2 py-1 rounded transition ${staff.status === 'present' ? 'bg-emerald-100 text-emerald-700 font-bold' : 'text-emerald-600 hover:bg-emerald-50'}`}>
+                                  <input type="radio" name={`status-${staff.id}`} className="hidden" checked={staff.status === 'present'} onChange={() => handleStatusChange(staff.id, 'present')} />
+                                  <span>มา</span>
+                                </label>
+                                <label className={`flex items-center space-x-1 md:space-x-2 cursor-pointer px-2 py-1 rounded transition ${staff.status === 'absent' ? 'bg-rose-100 text-rose-700 font-bold' : 'text-rose-500 hover:bg-rose-50'}`}>
+                                  <input type="radio" name={`status-${staff.id}`} className="hidden" checked={staff.status === 'absent'} onChange={() => handleStatusChange(staff.id, 'absent')} />
+                                  <span>ขาด</span>
+                                </label>
+                              </div>
+                            )}
                           </td>
                           <td className="px-6 py-3 text-center">
                             {proxy ? (

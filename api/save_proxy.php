@@ -30,6 +30,13 @@ try {
     ");
     $stmt->execute([$activity_id, $proxy_id, $absent_id]);
 
+    // Auto-set absent person's attendance to 'leave' (ส่งตัวแทน = นับว่าลา/ส่งแทน)
+    $stmtSetLeave = $conn->prepare("
+        UPDATE act_attendance SET status = 'leave'
+        WHERE activity_id = ? AND staff_id = ?
+    ");
+    $stmtSetLeave->execute([$activity_id, $absent_id]);
+
     // Fetch names for notification messages
     $stmtProxy = $conn->prepare("SELECT full_name FROM staffs WHERE id = ?");
     $stmtProxy->execute([$proxy_id]);

@@ -13,6 +13,13 @@ try {
     ");
     $stmt->execute([(int)$data['activity_id'], (int)$data['absent_id']]);
 
+    // Reset attendance back to pending when proxy is cancelled
+    $stmtReset = $conn->prepare("
+        UPDATE act_attendance SET status = 'pending'
+        WHERE activity_id = ? AND staff_id = ?
+    ");
+    $stmtReset->execute([(int)$data['activity_id'], (int)$data['absent_id']]);
+
     echo json_encode(['status' => 'success', 'message' => 'ยกเลิกตัวแทนเรียบร้อย']);
 } catch (Exception $e) {
     echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
